@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="シンプルでモダンな会議室予約システム">
+  <meta name="theme-color" content="#4361ee">
+  <title>会議室予約システム | SmartReserve</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>会議室予約システム <span class="app-badge">SmartReserve</span></h1>
+    </header>
+
+    <div class="room-images">
+      <div class="room-image-item">
+        <div class="image-wrapper">
+          <img src="https://x.gd/cmetb" alt="会議室A">
+          <div class="room-capacity"><i class="fas fa-users"></i> 最大8名</div>
+        </div>
+        <h3>会議室A</h3>
+        <p class="room-description">大きな窓からの自然光が入る明るい会議室です。</p>
+      </div>
+      <div class="room-image-item">
+        <div class="image-wrapper">
+          <img src="https://x.gd/hYprm" alt="会議室B">
+          <div class="room-capacity"><i class="fas fa-users"></i> 最大12名</div>
+        </div>
+        <h3>会議室B</h3>
+        <p class="room-description">プロジェクターと大型スクリーン完備の会議室です。</p>
+      </div>
+      <div class="room-image-item">
+        <div class="image-wrapper">
+          <img src="https://x.gd/ADreY" alt="会議室C">
+          <div class="room-capacity"><i class="fas fa-users"></i> 最大6名</div>
+        </div>
+        <h3>会議室C</h3>
+        <p class="room-description">小規模なミーティングに最適なコンパクトな会議室です。</p>
+      </div>
+    </div>
+
+    <div class="reservation-form">
+      <h2><i class="fas fa-calendar-alt"></i> 予約フォーム</h2>
+      <form id="reservationForm">
+        <div class="form-group">
+          <label for="roomSelect">会議室:</label>
+          <select id="roomSelect" required>
+            <option value="A">会議室A</option>
+            <option value="B">会議室B</option>
+            <option value="C">会議室C</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="reservationDate">予約日:</label>
+          <input type="date" id="reservationDate" required>
+        </div>
+
+        <div class="form-group time-selection">
+          <label>利用時間:</label>
+          <div class="time-inputs">
+            <div class="time-input-group">
+              <label for="startTime">開始時間:</label>
+              <select id="startTime" required>
+                <option value="">選択してください</option>
+                <option value="09:00">9:00</option>
+                <option value="09:30">9:30</option>
+                <option value="10:00">10:00</option>
+                <option value="10:30">10:30</option>
+                <option value="11:00">11:00</option>
+                <option value="11:30">11:30</option>
+                <option value="12:00">12:00</option>
+                <option value="12:30">12:30</option>
+                <option value="13:00">13:00</option>
+                <option value="13:30">13:30</option>
+                <option value="14:00">14:00</option>
+                <option value="14:30">14:30</option>
+                <option value="15:00">15:00</option>
+                <option value="15:30">15:30</option>
+                <option value="16:00">16:00</option>
+                <option value="16:30">16:30</option>
+                <option value="17:00">17:00</option>
+                <option value="17:30">17:30</option>
+                <option value="18:00">18:00</option>
+              </select>
+            </div>
+            <div class="time-input-group">
+              <label for="endTime">終了時間:</label>
+              <select id="endTime" required>
+                <option value="">選択してください</option>
+                <option value="09:30">9:30</option>
+                <option value="10:00">10:00</option>
+                <option value="10:30">10:30</option>
+                <option value="11:00">11:00</option>
+                <option value="11:30">11:30</option>
+                <option value="12:00">12:00</option>
+                <option value="12:30">12:30</option>
+                <option value="13:00">13:00</option>
+                <option value="13:30">13:30</option>
+                <option value="14:00">14:00</option>
+                <option value="14:30">14:30</option>
+                <option value="15:00">15:00</option>
+                <option value="15:30">15:30</option>
+                <option value="16:00">16:00</option>
+                <option value="16:30">16:30</option>
+                <option value="17:00">17:00</option>
+                <option value="17:30">17:30</option>
+                <option value="18:00">18:00</option>
+                <option value="18:30">18:30</option>
+                <option value="19:00">19:00</option>
+              </select>
+            </div>
+          </div>
+          <small class="form-help">既に予約されている時間帯と重複する場合は予約できません</small>
+        </div>
+
+        <div class="form-group">
+          <label for="reserverName">予約者名:</label>
+          <input type="text" id="reserverName" required>
+        </div>
+
+        <button type="submit" class="btn"><i class="fas fa-check-circle"></i> 予約する</button>
+      </form>
+    </div>
+
+    <div class="reservation-list">
+      <h2><i class="fas fa-list-alt"></i> 予約一覧</h2>
+
+      <div class="filter-controls">
+        <div class="search-container">
+          <input type="date" id="dateFilter" class="date-filter" aria-label="日付でフィルター">
+          <button id="filterButton" class="filter-btn"><i class="fas fa-filter"></i> フィルター</button>
+          <button id="clearFilterButton" class="clear-filter-btn"><i class="fas fa-times"></i> クリア</button>
+        </div>
+      </div>
+
+      <div class="room-tabs">
+        <button class="tab-btn active" data-room="all">すべて</button>
+        <button class="tab-btn" data-room="A">会議室A</button>
+        <button class="tab-btn" data-room="B">会議室B</button>
+        <button class="tab-btn" data-room="C">会議室C</button>
+      </div>
+      <div id="reservationList"></div>
+    </div>
+
+    <footer>
+      <p>&copy; 2023 会議室予約システム - SmartReserve</p>
+    </footer>
+  </div>
+
+  <div id="notification" class="notification"></div>
+
+  <script src="main.js"></script>
+</body>
+
+</html>
