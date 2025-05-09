@@ -725,3 +725,58 @@ select,
   border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.15);
 }
+
+/* 無限スクロール関連のスタイル */
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  margin: 20px 0;
+  color: var(--text-secondary);
+  gap: 10px;
+  font-size: 0.9rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.load-more-btn {
+  margin: 20px auto;
+  background-color: #f0f0f0;
+  color: var(--text-color);
+  border: 1px solid #e0e0e0;
+  width: auto;
+  text-transform: none;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.load-more-btn:hover {
+  background-color: #e6e6e6;
+  color: var(--text-color);
+  transform: translateY(-2px);
+}
+
+.no-more-reservations {
+  text-align: center;
+  padding: 15px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: 20px;
+  border-top: 1px dashed #e0e0e0;
+}
