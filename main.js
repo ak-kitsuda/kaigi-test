@@ -1,6 +1,11 @@
 // 予約データを格納する配列
 let reservations = [];
 let filteredDate = null;
+let currentPage = 1;
+const reservationsPerPage = 5; // 1ページあたりの予約表示数
+let isLoading = false; // 読み込み中フラグ
+let hasMoreReservations = true; // さらに表示する予約があるかどうか
+let filteredReservations = []; // フィルタリング後の予約を格納
 
 // DOMが読み込まれたら実行
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => {
       tabButtons.forEach(btn => btn.classList.remove('active'));
       button.classList.add('active');
+      // タブ切り替え時は1ページ目から表示
+      resetPagination();
       displayReservations(button.dataset.room);
     });
   });
@@ -62,7 +69,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 予約一覧を表示
   displayReservations('all');
+  
+  // スクロールイベントリスナーを設定
+  window.addEventListener('scroll', handleScroll);
 });
+
+// スクロール処理のハンドラー
+function handleScroll() {
+  // 画面の最下部までスクロールしたかを検出
+  if (isBottomVisible() && !isLoading && hasMoreReservations) {
+    loadMoreReservations();
+  }
+}
+
+// 画面の最下部が表示されているかを判定
+function isBottomVisible() {
+  const reservationList = document.getElementById('reservationList');
+  const contentHeight = reservationList.offsetHeight;
+  const scrollTop = window.scrollY || window.pageYOffset;
+  const windowHeight = window.innerHeight;
+  const bottomOfWindow = scrollTop + windowHeight;
+  
+  // 予約リストの下部から100pxの位置に到達したらtrueを返す
+  return bottomOfWindow >= contentHeight - 100;
+}
+
+// ページネーションをリセット
+function resetPagination() {
+  currentPage = 1;
+  hasMoreReservations = true;
+  isLoading = false;
+}
+
+// 追加の予約を読み込む
+function loadMoreReservations() {
+  if (filteredReservations.length === 0 || !hasMoreReservations) return;
+  
+  isLoading = true;
+  
+  // ローディングインジケーターを表示
+  showLoadingIndicator();
+  
+  // 実際の処理では遅延が発生するため、setTimeout でシミュレート
+  setTimeout(() => {
+    currentPage++;
+    appendReservations();
+    isLoading = false;
+    
+    // ローディングインジケーターを非表示
+    hideLoadingIndicator();
+  }, 500); // 0.5秒の遅延
+}
+
+// ローディングインジケーターを表示
+function showLoadingIndicator() {
+  let loadingIndicator = document.getElementById('loadingIndicator');
+  
+  if (!loadingIndicator) {
+    loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'loadingIndicator';
+    loadingIndicator.classList.add('loading-indicator');
+    loadingIndicator.innerHTML = '<div class="spinner"></div><span>読み込み中...</span>';
+    document.getElementById('reservationList').appendChild(loadingIndicator);
+  } else {
+    loadingIndicator.style.display = 'flex';
+  }
+}
+
+// ローディングインジケーターを非表示
+function hideLoadingIndicator() {
+  const loadingIndicator = document.getElementById('loadingIndicator');
+  if (loadingIndicator) {
+    loadingIndicator.style.display = 'none';
+  }
+}
 
 // クリック時のリップルエフェクト
 function createRippleEffect(element, event) {
@@ -257,7 +337,8 @@ function handleReservationSubmit(event) {
   // CSVファイルとしてダウンロードできるようにする
   updateCSVDownload();
 
-  // 予約一覧を更新
+  // ページネーションをリセットして予約一覧を更新
+  resetPagination();
   displayReservations('all');
 
   // フォームをリセット
@@ -358,7 +439,11 @@ function showNotification(message, type, isHTML = false) {
 // 予約一覧を表示
 function displayReservations(roomFilter) {
   const reservationList = document.getElementById('reservationList');
-  reservationList.innerHTML = '';
+  
+  // ページネーションリセット時は内容をクリア
+  if (currentPage === 1) {
+    reservationList.innerHTML = '';
+  }
 
   // 日付でソート
   const sortedReservations = [...reservations].sort((a, b) =>
@@ -366,7 +451,7 @@ function displayReservations(roomFilter) {
   );
 
   // 部屋でフィルタリング
-  let filteredReservations = roomFilter === 'all'
+  filteredReservations = roomFilter === 'all'
     ? sortedReservations
     : sortedReservations.filter(r => r.room === roomFilter);
 
@@ -388,11 +473,93 @@ function displayReservations(roomFilter) {
       emptyMessage = `${formattedDate}の予約はありません`;
     }
     reservationList.innerHTML = `<div class="empty-state"><i class="fas fa-calendar-times"></i><p>${emptyMessage}</p></div>`;
+    hasMoreReservations = false;
     return;
   }
 
+  // 現在のページで表示する予約を計算
+  const startIndex = (currentPage - 1) * reservationsPerPage;
+  const endIndex = Math.min(startIndex + reservationsPerPage, filteredReservations.length);
+  const currentPageReservations = filteredReservations.slice(startIndex, endIndex);
+
+  // 次のページがあるかどうかを判定
+  hasMoreReservations = endIndex < filteredReservations.length;
+
+  // 予約が追加で表示されない場合はメッセージを表示
+  if (currentPageReservations.length === 0 && currentPage > 1) {
+    showNotification('表示できる予約はすべて表示されました', 'success');
+    hasMoreReservations = false;
+    return;
+  }
+
+  // 予約一覧を生成して追加
+  appendReservationItems(currentPageReservations);
+  
+  // 「もっと見る」ボタンを表示（初期表示時のみ）
+  if (currentPage === 1 && hasMoreReservations) {
+    const loadMoreBtn = document.createElement('button');
+    loadMoreBtn.id = 'loadMoreBtn';
+    loadMoreBtn.className = 'btn load-more-btn';
+    loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down"></i> もっと見る';
+    loadMoreBtn.addEventListener('click', loadMoreReservations);
+    reservationList.appendChild(loadMoreBtn);
+  } else if (!hasMoreReservations) {
+    // すべて表示された場合は「もっと見る」ボタンを削除
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+      loadMoreBtn.remove();
+    }
+    // すべての予約を表示した場合のメッセージ
+    if (currentPage > 1) {
+      const noMoreDiv = document.createElement('div');
+      noMoreDiv.className = 'no-more-reservations';
+      noMoreDiv.innerHTML = '<p>すべての予約を表示しました</p>';
+      reservationList.appendChild(noMoreDiv);
+    }
+  }
+}
+
+// 追加の予約を表示
+function appendReservations() {
+  const startIndex = (currentPage - 1) * reservationsPerPage;
+  const endIndex = Math.min(startIndex + reservationsPerPage, filteredReservations.length);
+  const currentPageReservations = filteredReservations.slice(startIndex, endIndex);
+  
+  // 追加で表示する予約がない場合
+  if (currentPageReservations.length === 0) {
+    hasMoreReservations = false;
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+      loadMoreBtn.remove();
+    }
+    return;
+  }
+  
+  // 予約アイテムを追加
+  appendReservationItems(currentPageReservations);
+  
+  // 全て表示されたかチェック
+  if (endIndex >= filteredReservations.length) {
+    hasMoreReservations = false;
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+      loadMoreBtn.remove();
+    }
+    // すべての予約を表示した場合のメッセージ
+    const noMoreDiv = document.createElement('div');
+    noMoreDiv.className = 'no-more-reservations';
+    noMoreDiv.innerHTML = '<p>すべての予約を表示しました</p>';
+    document.getElementById('reservationList').appendChild(noMoreDiv);
+  }
+}
+
+// 予約アイテムをDOMに追加
+function appendReservationItems(reservationItems) {
+  const reservationList = document.getElementById('reservationList');
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+
   // 予約一覧を生成
-  filteredReservations.forEach(reservation => {
+  reservationItems.forEach(reservation => {
     const reservationItem = document.createElement('div');
     reservationItem.className = 'reservation-item';
 
@@ -449,7 +616,12 @@ function displayReservations(roomFilter) {
             </div>
         `;
 
-    reservationList.appendChild(reservationItem);
+    // 「もっと見る」ボタンの前に挿入
+    if (loadMoreBtn) {
+      reservationList.insertBefore(reservationItem, loadMoreBtn);
+    } else {
+      reservationList.appendChild(reservationItem);
+    }
 
     // 詳細トグルボタンのイベント設定
     const detailToggle = reservationItem.querySelector('.detail-toggle');
@@ -514,6 +686,7 @@ function cancelReservation(id) {
   reservations = reservations.filter(reservation => reservation.id !== id);
   saveReservations();
   updateCSVDownload();
+  resetPagination();
   displayReservations(document.querySelector('.tab-btn.active').dataset.room);
   showNotification('予約がキャンセルされました', 'success');
 }
@@ -587,6 +760,7 @@ function setupDateFilter() {
     if (selectedDate) {
       filteredDate = new Date(selectedDate);
       filteredDate.setHours(0, 0, 0, 0);
+      resetPagination();
       displayReservations(document.querySelector('.tab-btn.active').dataset.room);
 
       // フィルターが適用されていることを視覚的に示す
@@ -598,6 +772,7 @@ function setupDateFilter() {
   clearFilterButton.addEventListener('click', () => {
     filteredDate = null;
     dateFilter.value = '';
+    resetPagination();
     displayReservations(document.querySelector('.tab-btn.active').dataset.room);
 
     // フィルター適用中の視覚的な表示をクリア
